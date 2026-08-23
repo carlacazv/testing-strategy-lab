@@ -23,13 +23,14 @@
     "test:a11y": "playwright test tests/browser/a11y.spec.mjs",
     "test:all": "npm run check && npm run test:integration && npm run test:static && npm run test:unit && npm run test:component && npm run test:e2e && npm run test:a11y",
     "benchmark": "node scripts/run-benchmark.mjs",
-    "mutation": "node scripts/run-mutants.mjs"
+    "mutation": "node scripts/run-mutants.mjs",
+    "mutation:smoke": "node scripts/run-mutants.mjs --ids=unit-date-year-format,integration-auth-invalid-status,a11y-avatar-alt-missing --layers=unit,integrationFull,accessibility --require-kill=true"
   },
   "engines": {
     "node": ">=22.12"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.10.2",
+    "@axe-core/playwright": "4.10.2",
     "@playwright/test": "1.62.1",
     "jsdom": "27.0.1"
   }
