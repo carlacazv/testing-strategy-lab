@@ -1,0 +1,36 @@
+{
+  "name": "testing-strategy-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Evidence-driven benchmark of software testing strategies against a pinned open-source RealWorld frontend.",
+  "scripts": {
+    "check": "node --test tests/meta/*.test.mjs",
+    "sut:fetch": "node scripts/fetch-sut.mjs",
+    "sut:inject": "node scripts/inject-component-tests.mjs",
+    "sut:install": "npm --prefix .sut/conduit ci",
+    "sut:prepare": "npm run sut:fetch && npm run sut:install && npm run sut:inject",
+    "sut:api": "node scripts/mock-api.mjs",
+    "sut:front": "npm --prefix .sut/conduit run dev -w frontend -- --host 127.0.0.1",
+    "test:static": "npm --prefix .sut/conduit run build -w frontend",
+    "test:unit": "npm --prefix .sut/conduit test -- --run frontend/src/helpers/dateFormatter.test.js frontend/src/helpers/errorHandler.test.js",
+    "test:component": "npm --prefix .sut/conduit test -- --run frontend/src/components/ArticleTags/strategy-lab.test.jsx",
+    "test:integration": "node --test tests/integration/*.test.mjs",
+    "test:integration:smoke": "node --test tests/integration/contracts-smoke.test.mjs",
+    "test:e2e": "playwright test tests/browser --grep-invert @a11y",
+    "test:e2e:smoke": "playwright test tests/browser/home.spec.mjs",
+    "test:e2e:auth": "playwright test tests/browser/auth.spec.mjs",
+    "test:a11y": "playwright test tests/browser/a11y.spec.mjs",
+    "test:all": "npm run check && npm run test:integration && npm run test:static && npm run test:unit && npm run test:component && npm run test:e2e && npm run test:a11y",
+    "benchmark": "node scripts/run-benchmark.mjs",
+    "mutation": "node scripts/run-mutants.mjs"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@playwright/test": "1.62.1",
+    "jsdom": "27.0.1"
+  }
+}

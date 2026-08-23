@@ -1,0 +1,50 @@
+name: Strategy Benchmark
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+      - run: npm install
+      - run: npm run sut:prepare
+      - run: npx playwright install --with-deps chromium
+      - run: npm run benchmark
+      - run: npm run mutation
+      - name: Publish measured evidence into dashboard payload
+        run: |
+          node -e "const fs=require('fs'); const b=JSON.parse(fs.readFileSync('reports/benchmark/results.json')); const m=JSON.parse(fs.readFileSync('reports/mutation/results.json')); fs.writeFileSync('docs/data/latest.json', JSON.stringify({generatedAt:new Date().toISOString(), benchmark:b, mutation:m}, null, 2));"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: strategy-evidence
+          path: reports/
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  summary:
+    needs: benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Strategy benchmark completed and evidence was deployed."
