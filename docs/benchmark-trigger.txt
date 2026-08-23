@@ -1,0 +1,2 @@
+Manual benchmark trigger after enabling GitHub Pages via GitHub Actions.
+Triggered: 2026-08-23T10:12:00-03:00
