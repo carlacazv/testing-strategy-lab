@@ -20,7 +20,7 @@
     .card p { margin:0; color:#94a3b8; line-height:1.55; }
     .metric { font-size:2rem; font-weight:800; margin-top:12px; }
     .table-wrap { overflow:auto; border-radius:16px; margin-top:20px; border:1px solid #253047; }
-    table { width:100%; min-width:760px; border-collapse:collapse; background:rgba(15,23,42,.65); }
+    table { width:100%; min-width:900px; border-collapse:collapse; background:rgba(15,23,42,.65); }
     th,td { text-align:left; padding:14px 16px; border-bottom:1px solid #253047; }
     th { color:#93c5fd; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; }
     td { color:#cbd5e1; }
@@ -46,7 +46,7 @@
     <div class="card"><h2>System under test</h2><p>Conduit RealWorld frontend</p><div class="metric">React</div></div>
     <div class="card"><h2>Controlled boundary</h2><p>Local RealWorld-compatible API</p><div class="metric">0 DB flake</div></div>
     <div class="card"><h2>Measured axes</h2><p>Detection and execution cost stay separate</p><div class="metric">2 signals</div></div>
-    <div class="card"><h2>Mutation panel</h2><p>Cross-layer deterministic defects</p><div class="metric">4 initial</div></div>
+    <div class="card"><h2>Mutation panel</h2><p>Cross-layer deterministic defects</p><div class="metric">7 mutants</div></div>
   </div>
 
   <h2 class="section">Experimental arms</h2>
@@ -54,10 +54,10 @@
     <table>
       <thead><tr><th>Strategy</th><th>Representative emphasis</th><th>What the lab asks</th></tr></thead>
       <tbody>
-        <tr><td>Pyramid</td><td>Unit/component first</td><td>Does cheap feedback preserve enough detection?</td></tr>
-        <tr><td>Trophy</td><td>Integration-heavy</td><td>Does the middle boundary maximize confidence per cost?</td></tr>
-        <tr><td>Diamond</td><td>Component + integration</td><td>Can integration replace some unit depth?</td></tr>
-        <tr><td>Crab</td><td>Browser-heavy + a11y</td><td>What unique user-facing risks justify browser cost?</td></tr>
+        <tr><td>Pyramid</td><td>Unit/component + integration smoke</td><td>Does cheap feedback preserve enough detection?</td></tr>
+        <tr><td>Trophy</td><td>Full integration-heavy</td><td>Does the middle boundary maximize confidence per cost?</td></tr>
+        <tr><td>Diamond</td><td>Component + full integration</td><td>Can integration replace some unit depth?</td></tr>
+        <tr><td>Crab</td><td>Browser-heavy + accessibility</td><td>What unique user-facing risks justify browser cost?</td></tr>
         <tr><td>E2E-heavy</td><td>Browser dominant</td><td>How much detection is gained per extra execution second?</td></tr>
         <tr><td>Full</td><td>Every available suite</td><td>What is the upper-bound detection and cost?</td></tr>
       </tbody>
@@ -66,7 +66,7 @@
 
   <section id="measured" hidden>
     <h2 class="section">Measured strategy comparison</h2>
-    <p class="muted">Mutation score below is computed from the current deterministic functional mutant panel. Detection efficiency is killed mutants divided by measured strategy runtime; it is a comparison aid, not a universal quality score.</p>
+    <p class="muted">Mutation score is computed from the current deterministic cross-layer mutant panel. Detection efficiency is killed mutants divided by measured strategy runtime; it is a comparison aid, not a universal quality score.</p>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Strategy</th><th>Runtime</th><th>Mutants killed</th><th>Mutation score</th><th>Kills / second</th><th>Run</th></tr></thead>
@@ -76,10 +76,10 @@
     <div id="winner-note" class="note"></div>
 
     <h2 class="section">Layer detection matrix</h2>
-    <p class="muted">A check means that layer independently failed when the mutant was applied. This exposes exclusive guardians and redundant protection.</p>
+    <p class="muted">A check means that boundary independently failed when the mutant was applied. Smoke and full integration are kept separate so strategy arms are not collapsed into the same middle layer.</p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Mutant</th><th>Risk</th><th>Static</th><th>Unit</th><th>Component</th><th>Integration</th><th>E2E smoke</th><th>E2E auth</th></tr></thead>
+        <thead><tr><th>Mutant</th><th>Risk</th><th>Static</th><th>Unit</th><th>Component</th><th>Int. smoke</th><th>Int. full</th><th>E2E smoke</th><th>E2E auth</th><th>A11y</th></tr></thead>
         <tbody id="mutation-results"></tbody>
       </table>
     </div>
@@ -90,12 +90,12 @@
 </main>
 <script>
 const strategyDetection = {
-  pyramid: ['static','unit','component','integration','e2eSmoke'],
-  trophy: ['static','unit','component','integration','e2eSmoke'],
-  diamond: ['static','component','integration','e2eSmoke'],
-  crab: ['static','integration','e2eSmoke','e2eAuth'],
-  'e2e-heavy': ['static','e2eSmoke','e2eAuth'],
-  full: ['static','unit','component','integration','e2eSmoke','e2eAuth'],
+  pyramid: ['static','unit','component','integrationSmoke','e2eSmoke'],
+  trophy: ['static','unit','component','integrationFull','e2eSmoke'],
+  diamond: ['static','component','integrationFull','e2eSmoke'],
+  crab: ['static','integrationSmoke','e2eSmoke','e2eAuth','accessibility'],
+  'e2e-heavy': ['static','e2eSmoke','e2eAuth','accessibility'],
+  full: ['static','unit','component','integrationFull','e2eSmoke','e2eAuth','accessibility'],
 };
 
 const yes = value => value ? '<span class="pass">✓</span>' : '—';
@@ -145,9 +145,11 @@ fetch('./data/latest.json', { cache: 'no-store' }).then(r => r.json()).then(data
       <td>${yes(mutant.detections?.static?.killed)}</td>
       <td>${yes(mutant.detections?.unit?.killed)}</td>
       <td>${yes(mutant.detections?.component?.killed)}</td>
-      <td>${yes(mutant.detections?.integration?.killed)}</td>
+      <td>${yes(mutant.detections?.integrationSmoke?.killed)}</td>
+      <td>${yes(mutant.detections?.integrationFull?.killed)}</td>
       <td>${yes(mutant.detections?.e2eSmoke?.killed)}</td>
       <td>${yes(mutant.detections?.e2eAuth?.killed)}</td>
+      <td>${yes(mutant.detections?.accessibility?.killed)}</td>
     </tr>`).join('');
 }).catch(() => {
   document.getElementById('status').textContent = 'Evidence metadata unavailable';

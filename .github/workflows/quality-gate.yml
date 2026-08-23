@@ -37,6 +37,14 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: npm run test:a11y
+      - run: npm run mutation:smoke
+      - name: Upload mutation smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-smoke-evidence
+          path: reports/mutation/
+          if-no-files-found: ignore
       - name: Upload browser diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
