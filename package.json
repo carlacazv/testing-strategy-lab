@@ -8,7 +8,7 @@
     "check": "node --test tests/meta/*.test.mjs",
     "sut:fetch": "node scripts/fetch-sut.mjs",
     "sut:inject": "node scripts/inject-component-tests.mjs",
-    "sut:install": "npm --prefix .sut/conduit ci",
+    "sut:install": "npm --prefix .sut/conduit ci && npm --prefix .sut/conduit install --no-save --package-lock=false jsdom@27.0.1",
     "sut:prepare": "npm run sut:fetch && npm run sut:install && npm run sut:inject",
     "sut:api": "node scripts/mock-api.mjs",
     "sut:front": "npm --prefix .sut/conduit run dev -w frontend -- --host 127.0.0.1",
