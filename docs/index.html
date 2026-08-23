@@ -8,22 +8,31 @@
     :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background:#0b1020; color:#eef2ff; }
     * { box-sizing:border-box; }
     body { margin:0; background:radial-gradient(circle at top right,#172554 0,#0b1020 40%); min-height:100vh; }
-    main { max-width:1100px; margin:auto; padding:56px 24px 80px; }
+    main { max-width:1180px; margin:auto; padding:56px 24px 80px; }
     .eyebrow { color:#93c5fd; text-transform:uppercase; letter-spacing:.14em; font-size:.76rem; font-weight:700; }
-    h1 { font-size:clamp(2.4rem,7vw,5rem); line-height:.96; margin:.3em 0; max-width:850px; }
-    .lead { color:#cbd5e1; font-size:1.12rem; max-width:760px; line-height:1.7; }
+    h1 { font-size:clamp(2.4rem,7vw,5rem); line-height:.96; margin:.3em 0; max-width:900px; }
+    h2.section { margin-top:48px; font-size:1.55rem; }
+    .lead { color:#cbd5e1; font-size:1.12rem; max-width:820px; line-height:1.7; }
+    .muted { color:#94a3b8; line-height:1.6; }
     .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:34px; }
     .card { background:rgba(15,23,42,.78); border:1px solid #334155; border-radius:18px; padding:22px; box-shadow:0 18px 50px rgba(0,0,0,.2); }
     .card h2 { margin:0 0 8px; font-size:1.05rem; }
     .card p { margin:0; color:#94a3b8; line-height:1.55; }
     .metric { font-size:2rem; font-weight:800; margin-top:12px; }
-    table { width:100%; border-collapse:collapse; margin-top:28px; background:rgba(15,23,42,.65); border-radius:16px; overflow:hidden; }
+    .table-wrap { overflow:auto; border-radius:16px; margin-top:20px; border:1px solid #253047; }
+    table { width:100%; min-width:760px; border-collapse:collapse; background:rgba(15,23,42,.65); }
     th,td { text-align:left; padding:14px 16px; border-bottom:1px solid #253047; }
     th { color:#93c5fd; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; }
     td { color:#cbd5e1; }
+    tr:last-child td { border-bottom:0; }
     code { color:#bfdbfe; }
     a { color:#93c5fd; }
     .status { display:inline-block; margin-top:18px; padding:8px 12px; border:1px solid #475569; border-radius:999px; color:#cbd5e1; font-size:.85rem; }
+    .pass { color:#86efac; font-weight:700; }
+    .fail { color:#fca5a5; font-weight:700; }
+    .winner { color:#fde68a; font-weight:800; }
+    .note { border-left:3px solid #60a5fa; padding:12px 16px; background:rgba(30,41,59,.55); color:#cbd5e1; margin-top:20px; border-radius:0 10px 10px 0; }
+    #measured[hidden] { display:none; }
   </style>
 </head>
 <body>
@@ -40,26 +49,109 @@
     <div class="card"><h2>Mutation panel</h2><p>Cross-layer deterministic defects</p><div class="metric">4 initial</div></div>
   </div>
 
-  <table>
-    <thead><tr><th>Strategy</th><th>Representative emphasis</th><th>What the lab asks</th></tr></thead>
-    <tbody>
-      <tr><td>Pyramid</td><td>Unit/component first</td><td>Does cheap feedback preserve enough detection?</td></tr>
-      <tr><td>Trophy</td><td>Integration-heavy</td><td>Does the middle boundary maximize confidence per cost?</td></tr>
-      <tr><td>Diamond</td><td>Component + integration</td><td>Can integration replace some unit depth?</td></tr>
-      <tr><td>Crab</td><td>Browser-heavy + a11y</td><td>What unique user-facing risks justify browser cost?</td></tr>
-      <tr><td>E2E-heavy</td><td>Browser dominant</td><td>How much detection is gained per extra execution second?</td></tr>
-      <tr><td>Full</td><td>Every available suite</td><td>What is the upper-bound detection and cost?</td></tr>
-    </tbody>
-  </table>
+  <h2 class="section">Experimental arms</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Strategy</th><th>Representative emphasis</th><th>What the lab asks</th></tr></thead>
+      <tbody>
+        <tr><td>Pyramid</td><td>Unit/component first</td><td>Does cheap feedback preserve enough detection?</td></tr>
+        <tr><td>Trophy</td><td>Integration-heavy</td><td>Does the middle boundary maximize confidence per cost?</td></tr>
+        <tr><td>Diamond</td><td>Component + integration</td><td>Can integration replace some unit depth?</td></tr>
+        <tr><td>Crab</td><td>Browser-heavy + a11y</td><td>What unique user-facing risks justify browser cost?</td></tr>
+        <tr><td>E2E-heavy</td><td>Browser dominant</td><td>How much detection is gained per extra execution second?</td></tr>
+        <tr><td>Full</td><td>Every available suite</td><td>What is the upper-bound detection and cost?</td></tr>
+      </tbody>
+    </table>
+  </div>
 
+  <section id="measured" hidden>
+    <h2 class="section">Measured strategy comparison</h2>
+    <p class="muted">Mutation score below is computed from the current deterministic functional mutant panel. Detection efficiency is killed mutants divided by measured strategy runtime; it is a comparison aid, not a universal quality score.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Strategy</th><th>Runtime</th><th>Mutants killed</th><th>Mutation score</th><th>Kills / second</th><th>Run</th></tr></thead>
+        <tbody id="strategy-results"></tbody>
+      </table>
+    </div>
+    <div id="winner-note" class="note"></div>
+
+    <h2 class="section">Layer detection matrix</h2>
+    <p class="muted">A check means that layer independently failed when the mutant was applied. This exposes exclusive guardians and redundant protection.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Mutant</th><th>Risk</th><th>Static</th><th>Unit</th><th>Component</th><th>Integration</th><th>E2E smoke</th><th>E2E auth</th></tr></thead>
+        <tbody id="mutation-results"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="note">The lab does not declare a testing shape correct in advance. A layer may be slow and still be valuable if it uniquely kills a critical mutant; a fast layer may be cheap and still add little marginal protection.</div>
   <p class="lead" style="margin-top:34px">Source and reproducibility: <a href="https://github.com/carlacazv/testing-strategy-lab">github.com/carlacazv/testing-strategy-lab</a></p>
 </main>
 <script>
-fetch('./data/latest.json').then(r=>r.json()).then(data=>{
-  const status=document.getElementById('status');
-  if(data.status){ status.textContent=data.message || data.status; return; }
-  status.textContent=`Measured evidence generated ${new Date(data.generatedAt).toLocaleString()}`;
-}).catch(()=>{ document.getElementById('status').textContent='Evidence metadata unavailable'; });
+const strategyDetection = {
+  pyramid: ['static','unit','component','integration','e2eSmoke'],
+  trophy: ['static','unit','component','integration','e2eSmoke'],
+  diamond: ['static','component','integration','e2eSmoke'],
+  crab: ['static','integration','e2eSmoke','e2eAuth'],
+  'e2e-heavy': ['static','e2eSmoke','e2eAuth'],
+  full: ['static','unit','component','integration','e2eSmoke','e2eAuth'],
+};
+
+const yes = value => value ? '<span class="pass">✓</span>' : '—';
+const pct = value => `${Math.round(value * 100)}%`;
+
+fetch('./data/latest.json', { cache: 'no-store' }).then(r => r.json()).then(data => {
+  const status = document.getElementById('status');
+  if (data.status) {
+    status.textContent = data.message || data.status;
+    return;
+  }
+
+  status.textContent = `Measured evidence generated ${new Date(data.generatedAt).toLocaleString()}`;
+  const benchmark = data.benchmark?.results || [];
+  const mutants = data.mutation?.mutants || [];
+  if (!benchmark.length || !mutants.length) return;
+
+  document.getElementById('measured').hidden = false;
+  const rows = benchmark.map(run => {
+    const guards = strategyDetection[run.strategy] || [];
+    const killed = mutants.filter(mutant => guards.some(layer => mutant.detections?.[layer]?.killed)).length;
+    const score = killed / mutants.length;
+    const seconds = Math.max(run.durationMs / 1000, 0.001);
+    return { ...run, killed, score, efficiency: killed / seconds };
+  });
+
+  const maxEfficiency = Math.max(...rows.map(row => row.efficiency));
+  document.getElementById('strategy-results').innerHTML = rows.map(row => `
+    <tr>
+      <td class="${row.efficiency === maxEfficiency ? 'winner' : ''}">${row.strategy}</td>
+      <td>${(row.durationMs / 1000).toFixed(2)}s</td>
+      <td>${row.killed}/${mutants.length}</td>
+      <td>${pct(row.score)}</td>
+      <td>${row.efficiency.toFixed(3)}</td>
+      <td class="${row.passed ? 'pass' : 'fail'}">${row.passed ? 'PASS' : 'FAIL'}</td>
+    </tr>`).join('');
+
+  const efficient = rows.find(row => row.efficiency === maxEfficiency);
+  const maxScore = Math.max(...rows.map(row => row.score));
+  const strongest = rows.filter(row => row.score === maxScore).map(row => row.strategy).join(', ');
+  document.getElementById('winner-note').textContent = `Current evidence: ${efficient.strategy} has the highest kills-per-second on this panel; ${strongest} reaches the highest mutation score. These are empirical results for this SUT and mutant catalog, not universal rankings.`;
+
+  document.getElementById('mutation-results').innerHTML = mutants.map(mutant => `
+    <tr>
+      <td><code>${mutant.id}</code></td>
+      <td>${mutant.risk}</td>
+      <td>${yes(mutant.detections?.static?.killed)}</td>
+      <td>${yes(mutant.detections?.unit?.killed)}</td>
+      <td>${yes(mutant.detections?.component?.killed)}</td>
+      <td>${yes(mutant.detections?.integration?.killed)}</td>
+      <td>${yes(mutant.detections?.e2eSmoke?.killed)}</td>
+      <td>${yes(mutant.detections?.e2eAuth?.killed)}</td>
+    </tr>`).join('');
+}).catch(() => {
+  document.getElementById('status').textContent = 'Evidence metadata unavailable';
+});
 </script>
 </body>
 </html>
