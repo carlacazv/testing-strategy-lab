@@ -11,8 +11,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: strategy-benchmark
+  cancel-in-progress: true
 
 jobs:
   benchmark:
