@@ -1,6 +1,7 @@
 export const mutants = [
   {
     id: 'unit-date-year-format',
+    target: 'sut',
     path: 'frontend/src/helpers/dateFormatter.js',
     from: 'year: "numeric"',
     to: 'year: "2-digit"',
@@ -8,13 +9,31 @@ export const mutants = [
   },
   {
     id: 'component-empty-tags-render-list',
+    target: 'sut',
     path: 'frontend/src/components/ArticleTags/ArticleTags.jsx',
     from: 'tagList?.length > 0',
     to: 'tagList?.length >= 0',
     risk: 'Empty tag collections render meaningless UI',
   },
   {
+    id: 'integration-article-count-contract',
+    target: 'lab',
+    path: 'scripts/mock-api.mjs',
+    from: 'return json(res, 200, { articles: [article], articlesCount: 1 });',
+    to: 'return json(res, 200, { articles: [article], articleCount: 1 });',
+    risk: 'The article-list API silently breaks its pagination/count contract',
+  },
+  {
+    id: 'integration-auth-invalid-status',
+    target: 'lab',
+    path: 'scripts/mock-api.mjs',
+    from: "return json(res, 422, { errors: { credentials: ['are required'] } });",
+    to: "return json(res, 200, { errors: { credentials: ['are required'] } });",
+    risk: 'Invalid authentication payloads return a success status',
+  },
+  {
     id: 'e2e-home-tagline-regression',
+    target: 'sut',
     path: 'frontend/src/routes/Home.jsx',
     from: 'A place to share your knowledge.',
     to: 'A place to hide your knowledge.',
@@ -22,9 +41,18 @@ export const mutants = [
   },
   {
     id: 'e2e-login-wrong-navigation',
+    target: 'sut',
     path: 'frontend/src/components/LoginForm/LoginForm.jsx',
     from: 'navigate("/")',
     to: 'navigate("/settings")',
     risk: 'Successful login sends the user to the wrong destination',
+  },
+  {
+    id: 'a11y-avatar-alt-missing',
+    target: 'sut',
+    path: 'frontend/src/components/Avatar/Avatar.jsx',
+    from: 'alt={alt || "placeholder"}',
+    to: 'data-mutant-alt={alt || "placeholder"}',
+    risk: 'Meaningful author imagery loses its accessible text alternative',
   },
 ];
