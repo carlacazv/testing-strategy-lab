@@ -58,6 +58,9 @@ export function createMockApiServer() {
     if (req.method === 'GET' && pathname === `/api/articles/${article.slug}`) {
       return json(res, 200, { article });
     }
+    if (req.method === 'GET' && pathname === `/api/articles/${article.slug}/comments`) {
+      return json(res, 200, { comments: [] });
+    }
     if (req.method === 'POST' && pathname === '/api/users/login') {
       const body = await readJson(req);
       if (!body?.user?.email || !body?.user?.password) {
