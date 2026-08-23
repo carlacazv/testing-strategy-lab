@@ -2,7 +2,6 @@
 
 [![Quality Gate](https://github.com/carlacazv/testing-strategy-lab/actions/workflows/quality-gate.yml/badge.svg)](https://github.com/carlacazv/testing-strategy-lab/actions/workflows/quality-gate.yml)
 [![Strategy Benchmark](https://github.com/carlacazv/testing-strategy-lab/actions/workflows/benchmark.yml/badge.svg)](https://github.com/carlacazv/testing-strategy-lab/actions/workflows/benchmark.yml)
-[![Pages](https://github.com/carlacazv/testing-strategy-lab/actions/workflows/pages.yml/badge.svg)](https://github.com/carlacazv/testing-strategy-lab/actions/workflows/pages.yml)
 
 An evidence-driven laboratory for comparing **testing strategies**, not just individual test layers.
 
@@ -23,6 +22,8 @@ The benchmark uses the open-source **Conduit RealWorld** React frontend by TonyM
 
 The SUT is downloaded into `.sut/conduit` and is never committed here. The lab supplies a deterministic local RealWorld-compatible API on port `3001`; Vite proxies `/api` to it. This makes browser and integration experiments reproducible without making PostgreSQL availability part of the result.
 
+The upstream dependency graph stays immutable: `npm ci` is executed against the pinned lockfile. Harness-only dependencies such as `jsdom`, Playwright and axe live in this repository rather than modifying the SUT.
+
 ## Layers
 
 | Layer | Boundary | Command |
@@ -30,13 +31,14 @@ The SUT is downloaded into `.sut/conduit` and is never committed here. The lab s
 | Static | Production build / module graph | `npm run test:static` |
 | Unit | Upstream helper tests | `npm run test:unit` |
 | Component | Lab-injected React component tests | `npm run test:component` |
-| Integration | RealWorld HTTP contract against deterministic API | `npm run test:integration` |
+| Integration smoke | Small RealWorld HTTP contract set | `npm run test:integration:smoke` |
+| Integration full | Full deterministic HTTP contract suite | `npm run test:integration` |
 | Browser E2E | Real Chromium + Vite + deterministic API | `npm run test:e2e` |
 | Accessibility | axe-core scan in the real browser | `npm run test:a11y` |
 
 ## Strategy arms
 
-The benchmark currently defines representative arms rather than arbitrary percentages:
+The benchmark defines representative arms rather than arbitrary percentages:
 
 | Strategy | Included suites |
 |---|---|
@@ -64,32 +66,59 @@ Run the strategy runtime benchmark:
 npm run benchmark
 ```
 
-Run deterministic frontend mutation experiments:
+Run the complete deterministic mutation panel:
 
 ```bash
 npm run mutation
+```
+
+Run the small mutation gate used by pull requests:
+
+```bash
+npm run mutation:smoke
 ```
 
 Generated evidence is written under `reports/`.
 
 ## Mutation methodology
 
-The initial mutation panel deliberately crosses layer boundaries:
+The seven-mutant panel deliberately crosses independent boundaries:
 
-- date formatting defect — expected to be guarded by unit tests;
-- empty tag rendering defect — expected to be guarded by component tests;
-- home-page copy regression — expected to be guarded by browser tests;
-- post-login navigation defect — expected to be guarded by browser journey tests.
+| Mutant family | Example risk | Intended discriminating boundary |
+|---|---|---|
+| Unit | user-visible date formatting | Unit |
+| Component | empty tag rendering | Component |
+| Integration smoke | article count/pagination contract | Integration smoke |
+| Integration full | invalid-auth status contract | Integration full |
+| Browser E2E | home copy regression | E2E smoke |
+| Browser journey | wrong post-login navigation | E2E auth |
+| Accessibility | missing image text alternative | axe accessibility |
 
-Every mutant is applied to the pinned upstream source, each layer is executed independently, and the original file is restored in a `finally` block. A layer kills a mutant only when its command actually fails.
+Frontend mutants are applied to the pinned SUT; API-contract mutants are applied to the deterministic lab API. Every selected layer executes independently against each mutant, and the original file is restored in a `finally` block. A layer kills a mutant only when its command actually fails.
+
+The runner keeps `integrationSmoke` and `integrationFull` as separate observations. This matters because a Pyramid arm and a Trophy arm should not receive identical mutation credit merely because both contain something called “integration”.
+
+## CI evidence
+
+**Quality Gate** runs on branches and pull requests and proves:
+
+- harness/meta tests;
+- deterministic integration contracts;
+- production frontend build;
+- unit and component suites;
+- full Playwright browser journeys;
+- accessibility scan;
+- representative mutation smoke across unit, integration-full and accessibility boundaries.
+
+**Strategy Benchmark** runs after changes land on `main` (and can also be dispatched manually). It regenerates every strategy runtime plus the full mutation matrix, uploads raw evidence, and only then deploys the measured dashboard to GitHub Pages.
 
 ## Evidence dashboard
 
-GitHub Pages publishes the experiment design immediately. A manually triggered **Strategy Benchmark** workflow can regenerate runtime + mutation evidence and deploy the resulting JSON with the dashboard.
-
-Expected URL after Pages is enabled by the workflow:
+Measured dashboard:
 
 `https://carlacazv.github.io/testing-strategy-lab/`
+
+The dashboard reports runtime and detection separately, then derives mutation score and kills-per-second for comparison. Those metrics are evidence for this pinned SUT and mutant catalog, not universal rankings of testing strategies.
 
 ## Principles
 
@@ -98,6 +127,7 @@ Expected URL after Pages is enabled by the workflow:
 - A slow layer can still be essential if it uniquely guards a critical risk.
 - A fast layer can still be low-value if it kills no meaningful mutants.
 - Strategy selection should be based on marginal detection value, not geometry alone.
+- Infrastructure nondeterminism must not be mistaken for test-strategy evidence.
 
 ## License
 
