@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/TonyMckes/conduit-realworld-example-app.git",
+  "commit": "5e127d8569b300e0a21dc2c20ea680da4967b1aa",
+  "directory": ".sut/conduit",
+  "frontendUrl": "http://127.0.0.1:3000",
+  "apiUrl": "http://127.0.0.1:3001"
+}

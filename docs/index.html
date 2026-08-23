@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Testing Strategy Lab</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background:#0b1020; color:#eef2ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at top right,#172554 0,#0b1020 40%); min-height:100vh; }
+    main { max-width:1100px; margin:auto; padding:56px 24px 80px; }
+    .eyebrow { color:#93c5fd; text-transform:uppercase; letter-spacing:.14em; font-size:.76rem; font-weight:700; }
+    h1 { font-size:clamp(2.4rem,7vw,5rem); line-height:.96; margin:.3em 0; max-width:850px; }
+    .lead { color:#cbd5e1; font-size:1.12rem; max-width:760px; line-height:1.7; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:34px; }
+    .card { background:rgba(15,23,42,.78); border:1px solid #334155; border-radius:18px; padding:22px; box-shadow:0 18px 50px rgba(0,0,0,.2); }
+    .card h2 { margin:0 0 8px; font-size:1.05rem; }
+    .card p { margin:0; color:#94a3b8; line-height:1.55; }
+    .metric { font-size:2rem; font-weight:800; margin-top:12px; }
+    table { width:100%; border-collapse:collapse; margin-top:28px; background:rgba(15,23,42,.65); border-radius:16px; overflow:hidden; }
+    th,td { text-align:left; padding:14px 16px; border-bottom:1px solid #253047; }
+    th { color:#93c5fd; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; }
+    td { color:#cbd5e1; }
+    code { color:#bfdbfe; }
+    a { color:#93c5fd; }
+    .status { display:inline-block; margin-top:18px; padding:8px 12px; border:1px solid #475569; border-radius:999px; color:#cbd5e1; font-size:.85rem; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Evidence-driven quality engineering</div>
+  <h1>We test the testing strategies.</h1>
+  <p class="lead">Pyramid, Trophy, Diamond, Crab and E2E-heavy approaches are executed against the same pinned open-source React frontend. Runtime and mutant detection are measured separately so geometry never substitutes for evidence.</p>
+  <div id="status" class="status">Loading evidence…</div>
+
+  <div class="grid">
+    <div class="card"><h2>System under test</h2><p>Conduit RealWorld frontend</p><div class="metric">React</div></div>
+    <div class="card"><h2>Controlled boundary</h2><p>Local RealWorld-compatible API</p><div class="metric">0 DB flake</div></div>
+    <div class="card"><h2>Measured axes</h2><p>Detection and execution cost stay separate</p><div class="metric">2 signals</div></div>
+    <div class="card"><h2>Mutation panel</h2><p>Cross-layer deterministic defects</p><div class="metric">4 initial</div></div>
+  </div>
+
+  <table>
+    <thead><tr><th>Strategy</th><th>Representative emphasis</th><th>What the lab asks</th></tr></thead>
+    <tbody>
+      <tr><td>Pyramid</td><td>Unit/component first</td><td>Does cheap feedback preserve enough detection?</td></tr>
+      <tr><td>Trophy</td><td>Integration-heavy</td><td>Does the middle boundary maximize confidence per cost?</td></tr>
+      <tr><td>Diamond</td><td>Component + integration</td><td>Can integration replace some unit depth?</td></tr>
+      <tr><td>Crab</td><td>Browser-heavy + a11y</td><td>What unique user-facing risks justify browser cost?</td></tr>
+      <tr><td>E2E-heavy</td><td>Browser dominant</td><td>How much detection is gained per extra execution second?</td></tr>
+      <tr><td>Full</td><td>Every available suite</td><td>What is the upper-bound detection and cost?</td></tr>
+    </tbody>
+  </table>
+
+  <p class="lead" style="margin-top:34px">Source and reproducibility: <a href="https://github.com/carlacazv/testing-strategy-lab">github.com/carlacazv/testing-strategy-lab</a></p>
+</main>
+<script>
+fetch('./data/latest.json').then(r=>r.json()).then(data=>{
+  const status=document.getElementById('status');
+  if(data.status){ status.textContent=data.message || data.status; return; }
+  status.textContent=`Measured evidence generated ${new Date(data.generatedAt).toLocaleString()}`;
+}).catch(()=>{ document.getElementById('status').textContent='Evidence metadata unavailable'; });
+</script>
+</body>
+</html>

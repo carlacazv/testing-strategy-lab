@@ -1,0 +1,5 @@
+{
+  "status": "awaiting-first-benchmark",
+  "message": "Run the Strategy Benchmark workflow to publish measured runtime and mutation evidence.",
+  "sutCommit": "5e127d8569b300e0a21dc2c20ea680da4967b1aa"
+}
