@@ -17,6 +17,10 @@ concurrency:
 jobs:
   benchmark:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,11 +44,12 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs
-      - id: deployment
+      - name: Deploy measured dashboard
+        id: deployment
         uses: actions/deploy-pages@v4
 
   summary:
     needs: benchmark
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Strategy benchmark completed and evidence was deployed."
+      - run: echo "Strategy benchmark completed and measured evidence was deployed."
